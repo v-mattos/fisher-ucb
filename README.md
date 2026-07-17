@@ -31,15 +31,8 @@ This single entry point runs every bandit simulation, builds the three
 tables' data CSVs, plots the five figures the paper includes, and copies
 them into `../latex/images/`.
 
-`../data/` ships as a single `data.zip` (the exact CSVs used to write the
-paper) rather than 13 loose files, to keep the repository light. Running
-`reproduce_paper.py` from scratch regenerates every CSV directly and does
-not need the zip. To instead re-plot from the paper's original run without
-re-simulating anything, unzip it first:
-
-```bash
-cd ../data && unzip data.zip
-```
+`../data/` ships as a single `data.zip`, the exact CSVs used to write the
+paper.
 
 **Time budget**: ~6 hours end to end on a modest laptop CPU (measured on
 an Intel Core i5-12450H). The horizon experiment
