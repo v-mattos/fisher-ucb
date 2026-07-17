@@ -1,0 +1,8 @@
+numpy>=2.0
+scipy>=1.14
+matplotlib>=3.9
+
+# Optional: only needed for the symbolic derivation in verification/Kgap_c2.py.
+# Its numeric checks, and the ones in verification/binom_verify.py and
+# verification/poisson_verify.py, corroborate the same claim without it.
+sympy>=1.13
