@@ -80,7 +80,6 @@ code/
 │   ├── binom_verify.py            #   the beta_0 threshold mechanism, each
 │   ├── poisson_verify.py           #   independently of the bandit code above
 │   └── beta0_mechanism.py
-└── runtime.txt                # a historical timing log (superseded; kept for reference)
 ```
 
 `fisher_ucb.py`'s `run_fisher_ucb` takes `proj_interval = (mu_min, mu_max)`
