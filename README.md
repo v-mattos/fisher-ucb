@@ -44,7 +44,7 @@ interrupted run leaves every already-completed artifact valid.
 To check the orchestration works (parameter plumbing, step ordering, module
 dependencies) without waiting hours, run the smoke test instead — it uses
 tiny horizons/seed counts in an isolated scratch directory and touches
-nothing under `data/`, `figures/`, or `latex/`:
+nothing under `data/` or `figures/`:
 
 ```bash
 python reproduce_paper.py --smoke
