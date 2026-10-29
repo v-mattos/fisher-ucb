@@ -1,104 +1,133 @@
-# Fisher-UCB — code
+# Fisher-UCB
 
-Code accompanying *"Fisher-UCB: A Closed-Form Surrogate for KL-UCB on
-Exponential-Family Bandits"*. Fisher-UCB replaces
-KL-UCB's per-round numerical inverse-KL optimization with a single
-closed-form evaluation of the Fisher information at a projected empirical
-mean, and quantifies the resulting finite-horizon regret price with a
-first-order, signed gap bound.
+Implementation and experiments for *Fisher-UCB: A Closed-Form Surrogate for
+KL-UCB on Exponential-Family Bandits*.
 
-## Requirements
+## Installation
 
-- Python 3.12+
-- `numpy`, `scipy`, `matplotlib`
-- `sympy` (optional; only needed for the symbolic derivation in
-  `verification/Kgap_c2.py` — its numeric checks and the ones in
-  `verification/binom_verify.py`/`poisson_verify.py` corroborate the same
-  claim without it)
+Python 3.12 or later is required.
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r code/requirements.txt
 ```
 
-## Reproducing the paper
+The tested environment uses Python 3.13.11 on Linux. To install the tested
+versions of the four direct dependencies:
 
 ```bash
-cd code
-python reproduce_paper.py
+python -m pip install -r code/requirements-tested.txt
 ```
 
-This single entry point runs every bandit simulation, builds the three
-tables' data CSVs, plots the five figures the paper includes, and copies
-them into `../latex/images/`.
+## Reproduction
 
-`../data/` ships as a single `data.zip`, the exact CSVs used to write the
-paper.
-
-**Time budget**: ~6 hours end to end on a modest laptop CPU (measured on
-an Intel Core i5-12450H). The horizon experiment
-(T up to 1e7) alone takes ~4.5 hours, and the 1000-seed Poisson replication
-takes ~1 hour; everything else finishes in minutes. **Ctrl+C is safe at any
-point** — each step only writes its CSV/PDF when it finishes, so an
-interrupted run leaves every already-completed artifact valid.
-
-To check the orchestration works (parameter plumbing, step ordering, module
-dependencies) without waiting hours, run the smoke test instead — it uses
-tiny horizons/seed counts in an isolated scratch directory and touches
-nothing under `data/` or `figures/`:
+Generate the four tables and six figures from the published data:
 
 ```bash
-python reproduce_paper.py --smoke
+python code/reproduce_paper.py --from-data
 ```
 
-## What it produces
+Check the numerical implementation, replay selected seeds and regenerate the
+outputs:
 
-| Paper artifact | Script(s) | Output |
+```bash
+python code/reproduce_paper.py --check
+```
+
+Run all stages with reduced horizons and seed counts:
+
+```bash
+python code/reproduce_paper.py --smoke
+```
+
+Run the complete experiments, including horizons up to 10^7, the 1,000-seed
+certified Poisson experiment and a new timing session:
+
+```bash
+python code/reproduce_paper.py
+```
+
+Analysis and replay results are written to `build/paper/`, reduced runs to
+`build/smoke/`, and complete experiments to `build/full/`. Use `--output PATH`
+to choose another directory. Statistical checkpoints resume when their
+configuration matches. Complete timing sessions are reused; new measurements
+use a separate output directory.
+
+## Outputs
+
+Paths below are relative to the selected output directory.
+
+| Artifact | Files | Experiment |
 |---|---|---|
-| Table 1 (Bernoulli/Exponential/Poisson/Gaussian) | `gen_regret_data.py`, `gen_poisson_data.py`, `gen_table_data.py` | `data/table1_summary.csv` |
-| Table 2 (Binomial, sign reversal) | `gen_binomial_data.py`, `gen_table_data.py` | `data/table2_summary.csv` |
-| Table 3 (runtime) | `gen_regret_data.py` | `data/table3_summary.csv` |
-| Figure 1 (regret curves) | `gen_regret_data.py` / `plot_regret_curves.py` | `figures/regret_curves.pdf` |
-| Figure 2 (Poisson) | `gen_poisson_data.py` / `plot_poisson_curves.py` | `figures/poisson_curves_n1000_merged.pdf` |
-| Figure 3 (Binomial) | `gen_binomial_data.py` / `plot_binomial_curves.py` | `figures/binomial_curves_n100.pdf` |
-| Horizon-scaling figure | `gen_horizon_data.py` / `plot_horizon_curves.py` | `figures/horizon_scaling.pdf` |
-| Arms-scaling (runtime) figure | `gen_arms_scaling_data.py` / `plot_arms_scaling_curves.py` | `figures/scaling_runtime.pdf` |
+| Table 1 | `tables/table1.csv`, `.tex` | Bernoulli, Exponential and Poisson |
+| Table 2 | `tables/table2.csv`, `.tex` | Reflected Binomial |
+| Table 3 | `tables/table3.csv`, `.tex` | Boundary instances |
+| Table 4 | `tables/table4.csv`, `.tex` | Runtime benchmark |
+| Figure 1 | `figures/regret_curves.pdf` | Bernoulli/Exponential, 20 seeds |
+| Figure 2 | `figures/poisson_curves.pdf` | Poisson and projection comparison, 20 seeds each |
+| Figure 3 | `figures/binomial_curves_n100.pdf` | Reflected Binomial, 100 seeds |
+| Figure 4 | `figures/horizon_scaling.pdf` | Paired regret differences and radius ratios |
+| Figure 5 | `figures/scaling_runtime_combined.pdf` | Runtime versus number of arms |
+| Figure 6 | `figures/scaling_regret_k100.pdf` | Many-arm Bernoulli/Exponential, 20 seeds |
+
+CSV tables contain full numerical precision. The values used in the figures
+are also saved in `figures/plotted_values.json`. Curve bands show population
+standard deviations, clipped at zero. Table confidence half-widths and the
+paired error bars in Figure 4 use 1.96 times the sample standard error.
+
+## Data
+
+`data/reference.zip` contains summaries, per-seed results, checkpoints and
+experiment metadata. The pipeline extracts it to `data/reference/` on first
+use. Select another dataset with `--data-root PATH`.
+
+After updating the archive, replace the extracted copy with:
+
+```bash
+python code/reproduce_paper.py --from-data --refresh-data
+```
+
+`--refresh-data` replaces only `data/reference/`; simulation outputs and their
+checkpoints are stored separately under `build/`.
+
+The dataset contains 9,200 statistical records, 1,000 certified Poisson
+observations and 84 timing trials. Some experiments share observations.
+Validation checks seed and configuration coverage, recomputed summaries,
+checkpoint consistency and the numerical values reported in the tables.
+
+`--check` replays seed zero for the main and boundary configurations at their
+saved horizons. Use `--replay-seeds N` to increase this count.
+
+## Runtime benchmark
+
+The published measurements use an Intel Core i7-13650HX, one pinned logical
+CPU and one numerical-library thread. The benchmark uses Bernoulli rewards,
+T=50,000, K in {4, 20, 50, 100}, seven methods and three repetitions of reward
+seed zero. All KL solvers target absolute index error 1e-6. Repetitions
+measure timing variability. New measurements depend on the CPU and system
+load. Running the timing benchmark requires Linux CPU affinity support.
+
+## Tests
+
+```bash
+python -B -m unittest discover -s tests -v
+python code/reproduce_paper.py --verify-only
+```
+
+The test suite covers numerical identities, fixed trajectory cases, checkpoint
+resume and incomplete datasets. Numerical and symbolic checks run with
+`--verify-only`, with `--check`, and in CI. Simulation runs do not repeat them.
+Verification results are written to `build/verification/` by default.
+Results record experiment settings and software metadata.
 
 ## Layout
 
-```
-code/
-├── reproduce_paper.py       # single entry point (see above)
-├── fisher_ucb.py             # core: arms, closed-form I_F, KL-UCB inversion,
-│                              #   UCB1 / Fisher-UCB / KL-UCB algorithms
-├── fisher_poisson.py          # Poisson-family extension (imports fisher_ucb)
-├── fisher_binomial.py         # Binomial(n fixed)-family extension
-├── gen_*_data.py               # bandit simulations -> data/*.csv (one per figure/table)
-├── plot_*.py                   # data/*.csv -> figures/*.pdf (plotting only)
-├── verification/               # independent numerical checks of the theory:
-│   ├── Kverify2.py              #   confirms the gap cone, the c2 second-order
-│   ├── Kgap_c2.py                #   coefficient, the Binomial sign flip, and
-│   ├── binom_verify.py            #   the beta_0 threshold mechanism, each
-│   ├── poisson_verify.py           #   independently of the bandit code above
-│   └── beta0_mechanism.py
+```text
+code/                  implementation and reproduction commands
+  verification/        numerical checks and trajectory cases
+  runtime/             timing benchmark and solvers
+data/                  publication data
+tests/                 pipeline tests
+build/                 generated outputs
 ```
 
-`fisher_ucb.py`'s `run_fisher_ucb` takes `proj_interval = (mu_min, mu_max)`
-— the projection interval written $\Pi_K$ / $K$ in the paper — and evaluates
-the closed-form Fisher information at the *projected* empirical mean while
-the index centre uses the *raw* empirical mean, exactly as in the paper's
-Algorithm 1.
-
-## Verifying the theory independently of the bandit code
-
-The five scripts in `verification/` are self-contained (no bandit
-simulation, no dependency on `fisher_ucb.py`) and check the paper's closed-
-form claims by direct computation / numerical root-finding:
-
-```bash
-cd verification
-python Kverify2.py          # gap cone: r_n stays inside 1 ± (C_loc/6) s + O(s^2)
-python Kgap_c2.py           # second-order coefficient c2 = (5 rho^2 - 3 rho4)/72
-python binom_verify.py      # I_F=1/Var, rho=-skew sign flip at mu=n/2, gap sign
-python poisson_verify.py    # same identities for the Poisson family
-python beta0_mechanism.py   # why beta_0 in [1, 3/2] (boundary inflation, not the optimal arm)
-```
+MIT license.
