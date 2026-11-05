@@ -3,7 +3,7 @@
 
 Default: execute the complete experiment profile in a new output tree.
 --from-data: validate and rebuild the article from the published reference data.
---smoke: run every stage with reduced horizons and seeds, including both extensions.
+--smoke: run every stage with reduced horizons and seeds, including timing.
 --check: rebuild from reference data and replay selected actual-horizon seeds.
 """
 import argparse
