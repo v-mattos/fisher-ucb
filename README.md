@@ -11,7 +11,7 @@ Python 3.12 or later is required.
 python -m pip install -r code/requirements.txt
 ```
 
-The tested environment uses Python 3.13.11 on Linux. To install the tested
+The tested environment uses Python 3.14.4 on Linux. To install the tested
 versions of the four direct dependencies:
 
 ```bash
@@ -73,6 +73,8 @@ CSV tables contain full numerical precision. The values used in the figures
 are also saved in `figures/plotted_values.json`. Curve bands show population
 standard deviations, clipped at zero. Table confidence half-widths and the
 paired error bars in Figure 4 use 1.96 times the sample standard error.
+The LaTeX table fragments use the article's labels, alignment and displayed
+precision. Matplotlib 3.11.2 is pinned for the figure layout.
 
 ## Data
 

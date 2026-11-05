@@ -3,3 +3,17 @@ __pycache__/
 .pytest_cache/
 build/
 data/reference/
+*.tex
+*.bib
+*.sty
+*.cls
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+audits/
+validation/
